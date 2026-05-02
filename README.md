@@ -23,40 +23,51 @@ Required libraries:
 - matplotlib
 - scikit-learn
 - pytest
+- jupyter
+- notebook
 
 ## File Structure
 
 ```text
-parkinsons_voice_detection/
+AAI-551-WS-Project/
 │
 ├── data/
-│   └── parkinsons.csv
+│   └── parkinsons.csv              # UCI Parkinson's voice dataset
 │
-├── results/
+├── results/                        # Generated outputs (created at runtime)
 │   ├── dataset_summary.txt
 │   └── status_distribution.png
 │
 ├── src/
-│   ├── config.py
-│   ├── dataset.py
-│   ├── model.py
-│   ├── utils.py
-│   ├── visualization.py
-│   └── main.py
+│   ├── __init__.py                 # Package initialisation
+│   ├── config.py                   # File paths and constants
+│   ├── dataset.py                  # VoiceDataset class
+│   ├── model.py                    # ParkinsonPredictor class
+│   ├── utils.py                    # Helper functions
+│   ├── visualization.py            # Plotting utilities
+│   └── main.py                     # Standalone CLI entry point
 │
 ├── tests/
-│   └── test_utils.py
+│   ├── __init__.py
+│   ├── test_dataset.py             # Tests for VoiceDataset
+│   ├── test_model.py               # Tests for ParkinsonPredictor
+│   └── test_utils.py               # Tests for utility functions
 │
+├── parkinsons_detection.ipynb      # Main Jupyter Notebook (project entry point)
+├── conftest.py                     # pytest path configuration
 ├── requirements.txt
 └── README.md
 ```
 
 ## How to Use
-1. Download the Parkinson's dataset from the UCI Machine Learning Repository.
-2. Rename the CSV file as `parkinsons.csv`.
-3. Place the file inside the `data/` folder.
-4. Run the program from the project root:
 
+### Option A – Jupyter Notebook (recommended)
+```bash
+jupyter notebook parkinsons_detection.ipynb
+```
+Run all cells from top to bottom.
+
+### Option B – Command line
 ```bash
 python src/main.py
 ```
@@ -69,31 +80,44 @@ pytest
 ```
 
 ## Python Requirements Covered
+
+### Part 1
 - Two meaningful classes: `VoiceDataset` and `ParkinsonPredictor`
-- Class relationship: `ParkinsonPredictor` uses data prepared by `VoiceDataset`
-- Multiple functions: validation, summary saving, feature selection, visualization
+- Class relationship: `ParkinsonPredictor` uses data prepared by `VoiceDataset` (composition)
+- Multiple functions: `validate_file_path`, `validate_required_columns`, `select_numeric_features`, `save_dataset_summary`, `prediction_generator`, `plot_status_distribution`
 - Advanced libraries: pandas, numpy, matplotlib, scikit-learn
-- Exception handling: missing file, empty data, invalid columns, untrained model
-- Data I/O: reads CSV file and writes summary/plot results
-- Loops and if statements included throughout the program
-- Mutable data types: list, dictionary, DataFrame
-- Immutable data types: string, tuple, integer, float
-- Operator overloads: `__str__`, `__len__`, and `__add__`
-- Special function: `filter()` with `lambda`
-- Comprehension syntax: list comprehension for feature selection
-- Built-in module: `time` and `pathlib`
-- Generator function: `prediction_generator()`
-- Set operations: required column validation
-- Uses `if __name__ == "__main__":`
-- Includes docstrings and meaningful comments
+- Exception handling: `FileNotFoundError` (missing CSV), `ValueError` (empty data / missing columns / single-class target), `RuntimeError` (predicting before training)
+- Data I/O: reads `parkinsons.csv`; writes `results/dataset_summary.txt` and `results/status_distribution.png`
+- Loops and if statements throughout all modules
+- Mutable data types: `list`, `dict`, `pd.DataFrame`
+- Immutable data types: `str`, `tuple`, `int`, `float`
+- Operator overloads: `__str__`, `__len__` (VoiceDataset), `__str__`, `__add__` (ParkinsonPredictor)
+- Docstrings and meaningful comments on every class and function
+
+### Part 2
+- Special function: `filter()` with `lambda` in `select_numeric_features()` (`utils.py`)
+- Comprehension: list comprehension for feature column selection (`utils.py`, notebook)
+- Built-in modules: `time` (timestamps) and `math` (log₂ index-bit calculation) in `utils.py`
+- Generator function: `prediction_generator()` in `utils.py`
+- Set operations: `validate_required_columns()` uses set difference (`utils.py`)
+- `if __name__ == "__main__":` guard in `src/main.py`
 
 ## Team Contributions
+
 ### Charmilkumar Vijaykumar Patel
-- Designed the project structure
-- Implemented data loading and preprocessing logic
-- Added exception handling and dataset summary output
+- Designed the overall project structure and module layout
+- Implemented `VoiceDataset` class: data loading, column validation, train/test splitting
+- Implemented exception handling scenarios (`FileNotFoundError`, `ValueError`)
+- Wrote `validate_file_path`, `validate_required_columns`, and `save_dataset_summary` utility functions
+- Wrote `tests/test_dataset.py` and `tests/test_utils.py`
+- Created and maintained the Jupyter Notebook (`parkinsons_detection.ipynb`)
 
 ### Yunyang Zhang
-- Implemented machine learning model training and evaluation
-- Added visualization module
-- Helped with testing, debugging, and README documentation
+- Implemented `ParkinsonPredictor` class: Random Forest training, prediction, evaluation
+- Implemented `select_numeric_features` (filter + lambda + list comprehension)
+- Implemented `prediction_generator` generator function
+- Implemented `plot_status_distribution` visualization module
+- Wrote `tests/test_model.py`
+- Wrote `src/config.py` and `src/main.py`
+- Updated README with complete documentation
+
