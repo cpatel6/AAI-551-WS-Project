@@ -1,32 +1,19 @@
 """
-Utility functions for validation, dataset summary, and result processing.
+Utility functions for validation, dataset summary, and prediction formatting.
 
-This module includes regular functions, a generator function, filter(), lambda,
-list comprehension, set operations, loops, conditionals, and exception handling.
-Built-in modules used: ``time`` (timestamps) and ``math`` (numeric calculations).
+Uses: time (timestamps), math (numeric calculations), filter(), lambda,
+list comprehension, set operations, and a generator function.
 """
 
 import math
 import time
 from pathlib import Path
-from typing import Dict, Generator, Iterable, List
 
 import pandas as pd
 
 
-def validate_file_path(file_path: Path) -> bool:
-    """
-    Validate whether the dataset file exists.
-
-    Parameters:
-        file_path (Path): Path of the dataset file.
-
-    Returns:
-        bool: True if file exists.
-
-    Raises:
-        FileNotFoundError: If the file does not exist.
-    """
+def validate_file_path(file_path):
+    """Raise FileNotFoundError if the dataset file does not exist."""
     if not file_path.exists():
         raise FileNotFoundError(
             f"Dataset file was not found: {file_path}\n"
@@ -35,20 +22,8 @@ def validate_file_path(file_path: Path) -> bool:
     return True
 
 
-def validate_required_columns(df: pd.DataFrame, required_columns: Iterable[str]) -> bool:
-    """
-    Check whether all required columns are present using set operations.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset.
-        required_columns (Iterable[str]): Required column names.
-
-    Returns:
-        bool: True if all required columns are available.
-
-    Raises:
-        ValueError: If required columns are missing.
-    """
+def validate_required_columns(df, required_columns):
+    """Raise ValueError if any required columns are missing from the DataFrame."""
     available_columns = set(df.columns)
     required_set = set(required_columns)
     missing_columns = required_set - available_columns
@@ -58,34 +33,17 @@ def validate_required_columns(df: pd.DataFrame, required_columns: Iterable[str])
     return True
 
 
-def select_numeric_features(df: pd.DataFrame, excluded_columns: List[str]) -> List[str]:
-    """
-    Select numeric feature columns using filter(), lambda, and list comprehension.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset.
-        excluded_columns (List[str]): Columns to remove from model features.
-
-    Returns:
-        List[str]: List of selected numeric feature names.
-    """
+def select_numeric_features(df, excluded_columns):
+    """Return a list of numeric columns, excluding the specified ones."""
     numeric_columns = list(filter(lambda col: pd.api.types.is_numeric_dtype(df[col]), df.columns))
 
-    # List comprehension removes target and identifier columns.
+    # List comprehension removes target and identifier columns
     feature_columns = [col for col in numeric_columns if col not in excluded_columns]
     return feature_columns
 
 
-def prediction_generator(predictions: Iterable[int]) -> Generator[str, None, None]:
-    """
-    Generator function that converts numeric predictions into readable messages.
-
-    Parameters:
-        predictions (Iterable[int]): Model prediction values.
-
-    Yields:
-        str: Human-readable prediction result.
-    """
+def prediction_generator(predictions):
+    """Generator that converts numeric predictions to readable strings."""
     for index, prediction in enumerate(predictions, start=1):
         if prediction == 1:
             yield f"Sample {index}: Parkinson's disease detected"
@@ -93,25 +51,15 @@ def prediction_generator(predictions: Iterable[int]) -> Generator[str, None, Non
             yield f"Sample {index}: Healthy voice sample"
 
 
-def save_dataset_summary(df: pd.DataFrame, output_file: Path) -> Dict[str, int]:
-    """
-    Summarize the dataset and save the summary to a text file.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset.
-        output_file (Path): Output file path.
-
-    Returns:
-        Dict[str, int]: Basic dataset summary information.
-    """
+def save_dataset_summary(df, output_file):
+    """Save a text summary of the dataset and return a summary dict."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     rows = df.shape[0]
     columns = df.shape[1]
     missing_values = int(df.isnull().sum().sum())
 
-    # Use math.log2 to compute the binary information capacity of the dataset
-    # (number of bits needed to index every row), rounded up with math.ceil.
+    # math.log2 and math.ceil: compute the number of bits needed to index every row
     index_bits = math.ceil(math.log2(rows)) if rows > 1 else 1
 
     summary = {

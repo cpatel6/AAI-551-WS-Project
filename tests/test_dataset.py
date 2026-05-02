@@ -7,9 +7,11 @@ and exception handling scenarios.
 
 import pandas as pd
 import pytest
+from pathlib import Path
 
 from src.dataset import VoiceDataset
-from src.config import DATA_FILE
+
+DATA_FILE = Path("data/parkinsons.csv")
 
 
 # ---------------------------------------------------------------------------

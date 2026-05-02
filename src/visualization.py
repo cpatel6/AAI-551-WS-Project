@@ -1,45 +1,19 @@
 """
-Visualization module for creating plots from the Parkinson's voice dataset.
-
-Functions
----------
-plot_status_distribution      -- bar chart of healthy vs Parkinson's samples
-plot_confusion_matrix         -- styled confusion-matrix heatmap
-plot_feature_correlation_heatmap -- Pearson correlation heatmap of all features
-plot_feature_importance       -- horizontal bar chart of Random Forest importances
-plot_roc_curve                -- ROC curve with AUC annotation
-plot_feature_boxplots         -- box plots comparing the two classes per feature
+Visualization functions for the Parkinson's voice dataset analysis.
 """
-
-from pathlib import Path
-from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import auc, roc_curve
 
-from config import TARGET_COLUMN, TOP_N_FEATURES
+TARGET_COLUMN = "status"
+TOP_N_FEATURES = 10
 
 
-# ── helpers ────────────────────────────────────────────────────────────────────
-
-def _ensure_dir(output_file: Path) -> None:
-    """Create parent directory of *output_file* if it does not already exist."""
+def plot_status_distribution(df, output_file):
+    """Save a bar chart showing healthy vs Parkinson's voice samples."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
-
-
-# ── public plotting functions ──────────────────────────────────────────────────
-
-def plot_status_distribution(df: pd.DataFrame, output_file: Path) -> None:
-    """
-    Create and save a bar chart showing healthy vs Parkinson's voice samples.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset.
-        output_file (Path): File path where the plot will be saved.
-    """
-    _ensure_dir(output_file)
 
     if TARGET_COLUMN not in df.columns:
         raise ValueError(f"'{TARGET_COLUMN}' column is required for plotting.")
@@ -51,7 +25,6 @@ def plot_status_distribution(df: pd.DataFrame, output_file: Path) -> None:
     fig, ax = plt.subplots(figsize=(7, 5))
     bars = ax.bar(labels, counts.values, color=colors, edgecolor="black", width=0.5)
 
-    # Annotate each bar with its count
     for bar, count in zip(bars, counts.values):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
@@ -71,20 +44,9 @@ def plot_status_distribution(df: pd.DataFrame, output_file: Path) -> None:
     plt.close(fig)
 
 
-def plot_confusion_matrix(
-    cm: np.ndarray,
-    output_file: Path,
-    class_labels: List[str] = None,
-) -> None:
-    """
-    Create and save a styled confusion-matrix heatmap.
-
-    Parameters:
-        cm (np.ndarray): 2×2 confusion matrix (sklearn format).
-        output_file (Path): Output file path.
-        class_labels (List[str]): Optional axis tick labels (default: Healthy / Parkinson's).
-    """
-    _ensure_dir(output_file)
+def plot_confusion_matrix(cm, output_file, class_labels=None):
+    """Save a styled confusion-matrix heatmap."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     if class_labels is None:
         class_labels = ["Healthy (0)", "Parkinson's (1)"]
@@ -105,13 +67,11 @@ def plot_confusion_matrix(
     ax.title.set_fontsize(14)
     ax.title.set_fontweight("bold")
 
-    # Annotate each cell with its numeric value
     thresh = cm.max() / 2.0
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             ax.text(
-                j,
-                i,
+                j, i,
                 format(cm[i, j], "d"),
                 ha="center",
                 va="center",
@@ -125,26 +85,13 @@ def plot_confusion_matrix(
     plt.close(fig)
 
 
-def plot_feature_correlation_heatmap(
-    df: pd.DataFrame,
-    output_file: Path,
-    excluded_columns: List[str] = None,
-) -> None:
-    """
-    Create and save a Pearson correlation heatmap for all numeric features.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset.
-        output_file (Path): Output file path.
-        excluded_columns (List[str]): Columns to exclude before computing correlations
-            (e.g. identifier and target columns). Defaults to ['name', 'status'].
-    """
-    _ensure_dir(output_file)
+def plot_feature_correlation_heatmap(df, output_file, excluded_columns=None):
+    """Save a Pearson correlation heatmap for all numeric features."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     if excluded_columns is None:
         excluded_columns = ["name", TARGET_COLUMN]
 
-    # Select only numeric feature columns
     feature_df = df.select_dtypes(include=[np.number])
     feature_df = feature_df.drop(
         columns=[c for c in excluded_columns if c in feature_df.columns]
@@ -167,31 +114,13 @@ def plot_feature_correlation_heatmap(
     plt.close(fig)
 
 
-def plot_feature_importance(
-    feature_names: List[str],
-    importances: np.ndarray,
-    output_file: Path,
-    top_n: int = TOP_N_FEATURES,
-) -> None:
-    """
-    Create and save a horizontal bar chart of Random Forest feature importances.
+def plot_feature_importance(feature_names, importances, output_file, top_n=TOP_N_FEATURES):
+    """Save a horizontal bar chart of the top feature importances."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    Parameters:
-        feature_names (List[str]): Names of the model features.
-        importances (np.ndarray): Mean decrease in impurity for each feature.
-        output_file (Path): Output file path.
-        top_n (int): Number of top features to display (default: TOP_N_FEATURES).
-    """
-    _ensure_dir(output_file)
-
-    # Sort and take the top_n most important features
     indices = np.argsort(importances)[::-1][:top_n]
-    sorted_names = [feature_names[i] for i in indices]
-    sorted_vals = importances[indices]
-
-    # Reverse so the most important is at the top of the horizontal bar chart
-    sorted_names = sorted_names[::-1]
-    sorted_vals = sorted_vals[::-1]
+    sorted_names = [feature_names[i] for i in indices][::-1]
+    sorted_vals = importances[indices][::-1]
 
     fig, ax = plt.subplots(figsize=(9, 6))
     colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(sorted_vals)))
@@ -209,20 +138,9 @@ def plot_feature_importance(
     plt.close(fig)
 
 
-def plot_roc_curve(
-    y_true,
-    y_proba: np.ndarray,
-    output_file: Path,
-) -> None:
-    """
-    Create and save an ROC curve with AUC annotation.
-
-    Parameters:
-        y_true: True binary labels (0 or 1).
-        y_proba (np.ndarray): Predicted probabilities for the positive class.
-        output_file (Path): Output file path.
-    """
-    _ensure_dir(output_file)
+def plot_roc_curve(y_true, y_proba, output_file):
+    """Save an ROC curve with AUC annotation."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     fpr, tpr, _ = roc_curve(y_true, y_proba)
     roc_auc = auc(fpr, tpr)
@@ -244,23 +162,9 @@ def plot_roc_curve(
     plt.close(fig)
 
 
-def plot_feature_boxplots(
-    df: pd.DataFrame,
-    feature_names: List[str],
-    output_file: Path,
-    top_n: int = TOP_N_FEATURES,
-) -> None:
-    """
-    Create and save box plots comparing healthy vs Parkinson's samples for
-    the most discriminative features.
-
-    Parameters:
-        df (pd.DataFrame): Input dataset containing both features and the target column.
-        feature_names (List[str]): Feature columns to plot.
-        output_file (Path): Output file path.
-        top_n (int): Number of features to include in the grid (default: TOP_N_FEATURES).
-    """
-    _ensure_dir(output_file)
+def plot_feature_boxplots(df, feature_names, output_file, top_n=TOP_N_FEATURES):
+    """Save box plots comparing healthy vs Parkinson's for the top features."""
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
     if TARGET_COLUMN not in df.columns:
         raise ValueError(f"'{TARGET_COLUMN}' column is required for box plots.")
@@ -284,12 +188,11 @@ def plot_feature_boxplots(
             patch_artist=True,
             medianprops=dict(color="black", linewidth=2),
         )
-        bp["boxes"][0].set_facecolor("#A5D6A7")   # green for healthy
-        bp["boxes"][1].set_facecolor("#EF9A9A")   # red for Parkinson's
+        bp["boxes"][0].set_facecolor("#A5D6A7")
+        bp["boxes"][1].set_facecolor("#EF9A9A")
         ax.set_title(feature, fontsize=9, fontweight="bold")
         ax.tick_params(axis="x", labelsize=8)
 
-    # Hide any unused subplot axes
     for ax in axes[len(cols_to_plot):]:
         ax.set_visible(False)
 
