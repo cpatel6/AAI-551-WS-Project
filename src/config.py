@@ -1,0 +1,29 @@
+"""
+Configuration file for Parkinson's Disease Detection project.
+
+This file stores fixed paths and column names used by different modules.
+"""
+
+from pathlib import Path
+
+# Base project directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Input and output directories
+DATA_DIR = BASE_DIR / "data"
+RESULTS_DIR = BASE_DIR / "results"
+
+# Dataset and output file paths
+DATA_FILE = DATA_DIR / "parkinsons.csv"
+SUMMARY_FILE = RESULTS_DIR / "dataset_summary.txt"
+PLOT_FILE = RESULTS_DIR / "status_distribution.png"
+
+# Target column from the UCI Parkinson's dataset
+TARGET_COLUMN = "status"
+
+# Columns that should not be used as model features
+NON_FEATURE_COLUMNS = ["name", TARGET_COLUMN]
+
+# Random seed for reproducible train/test split
+RANDOM_STATE = 42
+TEST_SIZE = 0.20
