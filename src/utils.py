@@ -3,8 +3,10 @@ Utility functions for validation, dataset summary, and result processing.
 
 This module includes regular functions, a generator function, filter(), lambda,
 list comprehension, set operations, loops, conditionals, and exception handling.
+Built-in modules used: ``time`` (timestamps) and ``math`` (numeric calculations).
 """
 
+import math
 import time
 from pathlib import Path
 from typing import Dict, Generator, Iterable, List
@@ -104,10 +106,19 @@ def save_dataset_summary(df: pd.DataFrame, output_file: Path) -> Dict[str, int]:
     """
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    rows = df.shape[0]
+    columns = df.shape[1]
+    missing_values = int(df.isnull().sum().sum())
+
+    # Use math.log2 to compute the binary information capacity of the dataset
+    # (number of bits needed to index every row), rounded up with math.ceil.
+    index_bits = math.ceil(math.log2(rows)) if rows > 1 else 1
+
     summary = {
-        "rows": df.shape[0],
-        "columns": df.shape[1],
-        "missing_values": int(df.isnull().sum().sum()),
+        "rows": rows,
+        "columns": columns,
+        "missing_values": missing_values,
+        "index_bits": index_bits,
     }
 
     current_time = time.strftime("%Y-%m-%d %H:%M:%S")
